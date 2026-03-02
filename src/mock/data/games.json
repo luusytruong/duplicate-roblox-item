@@ -1,0 +1,9 @@
+[
+  { "name": "Adopt Me", "image": "/images/adopt-me.png" },
+  { "name": "Bee Swarm Simulator", "image": "/images/bee-swarm-simulator.png" },
+  { "name": "Blade Ball", "image": "/images/blade-ball.png" },
+  { "name": "Grow a Garden", "image": "/images/grow-a-garden.png" },
+  { "name": "Jailbreak", "image": "/images/jailbreak.png" },
+  { "name": "Murder Mystery 2", "image": "/images/murder-mystery-2.png" },
+  { "name": "Steal a Brainrot", "image": "/images/steal-a-brainrot.png" }
+]
