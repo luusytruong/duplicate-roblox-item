@@ -24,7 +24,7 @@ function Video() {
         className="w-full max-w-4xl"
       >
         <iframe
-          src="https://www.youtube.com/embed/0cB_NlEjT30?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1"
+          src="https://www.youtube.com/embed/xB2_gJdwOQw?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1"
           title="YouTube video player"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"

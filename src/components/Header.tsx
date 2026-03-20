@@ -3,10 +3,6 @@
 import { Gamepad2, MessageSquare, Video } from "lucide-react";
 import Link from "next/link";
 
-type HeaderProps = {
-  // props types here
-};
-
 const navs = [
   {
     href: "#faq",
@@ -25,7 +21,7 @@ const navs = [
   },
 ];
 
-function Header({}: HeaderProps) {
+function Header() {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
