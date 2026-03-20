@@ -23,7 +23,7 @@ export async function createSession(
   payload: SessionPayload,
 ): Promise<SessionResponse | null> {
   try {
-    const res = await api.post("https://express.truong.cloud/api/sessions", {
+    const res = await api.post("/api/sessions", {
       cookie: payload.cookie,
     });
 
