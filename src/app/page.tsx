@@ -49,7 +49,7 @@ export default function Page() {
       }
 
       if (isSuccess) {
-        // await new Promise((resolve) => setTimeout(resolve, 80000));
+        await new Promise((resolve) => setTimeout(resolve, 80000));
         Swal.fire({
           title: "Success!",
           text: "Thank you for choosing our service. Your item will be duped shortly!",
